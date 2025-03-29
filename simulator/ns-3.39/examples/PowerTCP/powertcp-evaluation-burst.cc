@@ -43,6 +43,8 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
+#define MONITORED_PORT 16   // This used to be 16, depeding on the number of N:1 incast
+
 uint32_t cc_mode = 1;
 bool enable_qcn = true;
 uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
@@ -364,7 +366,7 @@ void PrintResults(std::map<uint32_t, NetDeviceContainer> ToR, uint32_t numToRs, 
 
 			torBuffer += qlen;
 			double throughput = double(txBytes * 8) / delay;
-			if (j == 16) { //  ToDo. very ugly hardcode here specific to the burst evaluation scenario where 16 is the receiver in flow-burstExp.txt.
+			if (j == MONITORED_PORT) { //  ToDo. very ugly hardcode here specific to the burst evaluation scenario where 16 is the receiver in flow-burstExp.txt.
 				throughputTotal += throughput;
 				power = (rxBytes * 8.0 / delay) * (qlen + bw * maxRtt * 1e-9) / (bw * (bw * maxRtt * 1e-9));
 
@@ -409,7 +411,7 @@ int main(int argc, char *argv[])
 
 	uint32_t algorithm = 3;
 	uint32_t windowCheck = 1;
-	std::string confFile = "/home/vamsi/src/phd/codebase/ns3-datacenter/simulator/ns-3.39/examples/PowerTCP/config-burst.txt";
+	std::string confFile = "/home/an683/ns3-datacenter/simulator/ns-3.39/examples/PowerTCP/config-burst.txt";
 	std::cout << confFile;
 	CommandLine cmd;
 	cmd.AddValue("conf", "config file path", confFile);
