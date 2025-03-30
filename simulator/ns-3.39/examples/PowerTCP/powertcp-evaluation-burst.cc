@@ -43,7 +43,7 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE("GENERIC_SIMULATION");
 
-#define MONITORED_PORT 237   // This used to be 16, depeding on the number of N:1 incast
+#define MONITORED_PORT 16   // This used to be 16, depeding on the number of N:1 incast
 
 uint32_t cc_mode = 1;
 bool enable_qcn = true;
