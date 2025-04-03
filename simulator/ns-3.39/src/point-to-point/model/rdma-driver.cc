@@ -11,6 +11,8 @@ TypeId RdmaDriver::GetTypeId (void)
 		.SetParent<Object> ()
 		.AddTraceSource ("QpComplete", "A qp completes.",
 				MakeTraceSourceAccessor (&RdmaDriver::m_traceQpComplete),"ns3::Packet::TracedCallback")
+		.AddTraceSource ("PktRcv", "A packet received.",
+				MakeTraceSourceAccessor (&RdmaDriver::m_tracePktRcv),"ns3::Packet::TracedCallback")
 		;
 	return tid;
 }
@@ -49,7 +51,7 @@ void RdmaDriver::Init(void){
 	#endif
 	// RdmaHw do setup
 	m_rdma->SetNode(m_node);
-	m_rdma->Setup(MakeCallback(&RdmaDriver::QpComplete, this));
+	m_rdma->Setup(MakeCallback(&RdmaDriver::QpComplete, this), MakeCallback(&RdmaDriver::PktRcv, this));
 }
 
 void RdmaDriver::SetNode(Ptr<Node> node){
@@ -66,6 +68,10 @@ void RdmaDriver::AddQueuePair(uint64_t size, uint16_t pg, Ipv4Address sip, Ipv4A
 
 void RdmaDriver::QpComplete(Ptr<RdmaQueuePair> q){
 	m_traceQpComplete(q);
+}
+
+void RdmaDriver::PktRcv(Ptr<Packet> p, Ptr<RdmaQueuePair> q, CustomHeader &ch){
+	m_tracePktRcv(p, q, ch);
 }
 
 } // namespace ns3

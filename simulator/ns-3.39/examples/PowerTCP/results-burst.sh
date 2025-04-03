@@ -35,6 +35,7 @@ for algorithm in ${algs[@]};do
 	RESULT_FILE="$RES_DUMP/evaluation-${algNames[$algorithm]}.out"
 	# echo "time ./waf --run "evaluation-fairness --algorithm=${CCMODE[$algorithm]} --wien=$wien --delayWien=$delay --windowCheck=$window""
 	cat $RESULT_FILE | grep 'ToR 0 Port 16' > $RES_RESULTS/result-${algNames[$algorithm]}.burst
+	cat $RESULT_FILE | grep 'RTT ' > $RES_RESULTS/result-${algNames[$algorithm]}.pkt
 done
 
 

@@ -51,6 +51,7 @@ uint32_t packet_payload_size = 1000, l2_chunk_size = 0, l2_ack_interval = 0;
 double pause_time = 5, simulator_stop_time = 3.01;
 std::string data_rate, link_delay, topology_file, flow_file, trace_file, trace_output_file;
 std::string fct_output_file = "fct.txt";
+std::string pkt_output_file = "pkt.txt";
 std::string pfc_output_file = "pfc.txt";
 
 double alpha_resume_interval = 55, rp_timer, ewma_gain = 1 / 16;
@@ -175,6 +176,26 @@ Ipv4Address node_id_to_ip(uint32_t id) {
 
 uint32_t ip_to_node_id(Ipv4Address ip) {
 	return (ip.Get() >> 8) & 0xffff;
+}
+
+void pkt_rcvd(FILE* fout, Ptr<Packet> p, Ptr<RdmaQueuePair> qp, CustomHeader &ch) {
+	fprintf(fout, "Received a packet!\n");
+	fflush(fout);
+
+	double rtt = qp->prevRtt;
+	IntHeader &ih = ch.ack.ih;
+
+	uint16_t sport = ch.ack.sport;
+	uint16_t dport = ch.ack.dport;
+	
+	std::cout << "RTT " << rtt << " time " << Simulator::Now().GetSeconds() << " ";
+
+	for (uint32_t i = 0; i < ih.nhop; i++) {
+		uint32_t qlen = ih.hop[0].GetQlen();
+		std::cout << "qlen(" << i << ") " << qlen;
+	}
+
+	std::cout << " sport " << sport << " dport " << dport << "\n";
 }
 
 void qp_finish(FILE* fout, Ptr<RdmaQueuePair> q) {
@@ -601,6 +622,9 @@ int main(int argc, char *argv[])
 		} else if (key.compare("FCT_OUTPUT_FILE") == 0) {
 			conf >> fct_output_file;
 			std::cout << "FCT_OUTPUT_FILE\t\t" << fct_output_file << '\n';
+		} else if (key.compare("FCT_OUTPUT_FILE") == 0) {
+			conf >> pkt_output_file;
+			std::cout << "PKT_OUTPUT_FILE\t\t" << pkt_output_file << '\n';
 		} else if (key.compare("HAS_WIN") == 0) {
 			conf >> has_win;
 			std::cout << "HAS_WIN\t\t" << has_win << "\n";
@@ -957,6 +981,7 @@ int main(int argc, char *argv[])
 
 #if ENABLE_QP
 	FILE *fct_output = fopen(fct_output_file.c_str(), "w");
+	FILE *pkt_output = fopen(pkt_output_file.c_str(), "w");
 	//
 	// install RDMA driver
 	//
@@ -998,6 +1023,7 @@ int main(int argc, char *argv[])
 			node->AggregateObject (rdma);
 			rdma->Init();
 			rdma->TraceConnectWithoutContext("QpComplete", MakeBoundCallback (qp_finish, fct_output));
+			rdma->TraceConnectWithoutContext("PktRcv", MakeBoundCallback (pkt_rcvd, pkt_output));
 		}
 	}
 

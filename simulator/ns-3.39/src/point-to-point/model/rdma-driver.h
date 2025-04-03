@@ -18,6 +18,7 @@ public:
 
 	// trace
 	TracedCallback<Ptr<RdmaQueuePair> > m_traceQpComplete;
+	TracedCallback<Ptr<Packet>, Ptr<RdmaQueuePair>, CustomHeader& > m_tracePktRcv;
 
 	static TypeId GetTypeId (void);
 	RdmaDriver();
@@ -37,6 +38,9 @@ public:
 
 	// callback when qp completes
 	void QpComplete(Ptr<RdmaQueuePair> q);
+
+	// callback when packet received
+	void PktRcv(Ptr<Packet> p, Ptr<RdmaQueuePair> q, CustomHeader& ch);
 };
 
 } // namespace ns3

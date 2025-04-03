@@ -187,7 +187,7 @@ RdmaHw::RdmaHw() {
 void RdmaHw::SetNode(Ptr<Node> node) {
 	m_node = node;
 }
-void RdmaHw::Setup(QpCompleteCallback cb) {
+void RdmaHw::Setup(QpCompleteCallback cb, PktRcvCallback pb) {
 	for (uint32_t i = 0; i < m_nic.size(); i++) {
 		Ptr<QbbNetDevice> dev = m_nic[i].dev;
 		if (dev == NULL)
@@ -203,6 +203,7 @@ void RdmaHw::Setup(QpCompleteCallback cb) {
 	}
 	// setup qp complete callback
 	m_qpCompleteCallback = cb;
+	m_pktRcvCallback = pb;
 }
 
 uint32_t RdmaHw::GetNicIdxOfQp(Ptr<RdmaQueuePair> qp) {
@@ -1005,6 +1006,8 @@ void RdmaHw::UpdateRatePower(Ptr<RdmaQueuePair> qp, Ptr<Packet> p, CustomHeader 
 			qp->hp.hop[i] = ih.hop[i];
 	}else {
 		// check packet INT
+		m_pktRcvCallback(p, qp, ch);
+
 		IntHeader &ih = ch.ack.ih;
 		if (ih.nhop <= IntHeader::maxHop) {
 			double max_c = 0;

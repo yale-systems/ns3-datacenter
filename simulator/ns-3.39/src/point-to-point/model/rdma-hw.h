@@ -46,8 +46,12 @@ public:
 	typedef Callback<void, Ptr<RdmaQueuePair> > QpCompleteCallback;
 	QpCompleteCallback m_qpCompleteCallback;
 
+	// packet received callback
+	typedef Callback<void, Ptr<Packet>, Ptr<RdmaQueuePair>, CustomHeader& > PktRcvCallback;
+	PktRcvCallback m_pktRcvCallback;
+
 	void SetNode(Ptr<Node> node);
-	void Setup(QpCompleteCallback cb); // setup shared data and callbacks with the QbbNetDevice
+	void Setup(QpCompleteCallback cb, PktRcvCallback pb); // setup shared data and callbacks with the QbbNetDevice
 	static uint64_t GetQpKey(uint32_t dip, uint16_t sport, uint16_t pg); // get the lookup key for m_qpMap
 	Ptr<RdmaQueuePair> GetQp(uint32_t dip, uint16_t sport, uint16_t pg); // get the qp
 	uint32_t GetNicIdxOfQp(Ptr<RdmaQueuePair> qp); // get the NIC index of the qp
