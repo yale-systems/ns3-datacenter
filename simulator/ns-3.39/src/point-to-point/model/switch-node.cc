@@ -17,6 +17,8 @@
 #include "ns3/custom-priority-tag.h"
 #include "ns3/feedback-tag.h"
 #include "ns3/unsched-tag.h"
+#include "ns3/random-variable-stream.h"
+
 
 namespace ns3 {
 
@@ -50,6 +52,21 @@ TypeId SwitchNode::GetTypeId (void)
 	                                  BooleanValue(false),
 	                                  MakeBooleanAccessor(&SwitchNode::PowerEnabled),
 	                                  MakeBooleanChecker())
+						.AddAttribute("LyingEnabled",
+									  "The node lies about its queue length to get more data from the source",
+									  BooleanValue(false),
+									  MakeBooleanAccessor(&SwitchNode::lying_enabled),
+									  MakeBooleanChecker())
+						.AddAttribute("LyingProbability",
+									  "The probability that this node lies about its queue length in an INT header",
+									  DoubleValue(0),
+									  MakeDoubleAccessor(&SwitchNode::lying_prob),
+									  MakeDoubleChecker<double>(0, 1))
+						.AddAttribute("LyingMagnitude",
+									  "The magnitude of INT queue length lies",
+									  DoubleValue(0),
+									  MakeDoubleAccessor(&SwitchNode::lying_mag),
+									  MakeDoubleChecker<double>(0, 1))
 
 	                    ;
 	return tid;
@@ -237,6 +254,10 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 	InterfaceTag t;
 	p->PeekPacketTag(t);
 
+	Ptr<UniformRandomVariable> uniformRV = CreateObject<UniformRandomVariable> ();
+	uniformRV->SetAttribute ("Min", DoubleValue (0.0));
+	uniformRV->SetAttribute ("Max", DoubleValue (1.0));
+
 	MyPriorityTag priotag;
 	bool found = p->PeekPacketTag(priotag);
 
@@ -268,8 +289,19 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 			if (m_ccMode == 3) { // HPCC or PowerTCP-INT
 				if (!PowerEnabled)
 					ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
-				else
-					ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
+				else {
+					if (!lying_enabled) {
+						ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
+					}
+					else {
+						uint32_t new_qlen = dev->GetQueue()->GetNBytesTotal();
+
+						if (uniformRV->GetValue() <= lying_prob) 
+							new_qlen = (uint32_t)((double)dev->GetQueue()->GetNBytesTotal() * (1.0 - lying_mag));
+
+						ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), new_qlen, dev->GetDataRate().GetBitRate());
+					}
+				}
 				// ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
 			} else if (m_ccMode == 10) { // HPCC-PINT
 				uint64_t t = Simulator::Now().GetTimeStep();

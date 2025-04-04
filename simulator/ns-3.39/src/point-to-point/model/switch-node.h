@@ -37,6 +37,11 @@ protected:
 	// vamsi
 	bool PowerEnabled;
 
+	// amir
+	bool lying_enabled;
+	double lying_prob;
+	double lying_mag;
+
 private:
 	int GetOutDev(Ptr<const Packet>, CustomHeader &ch);
 	void SendToDev(Ptr<Packet>p, CustomHeader &ch);

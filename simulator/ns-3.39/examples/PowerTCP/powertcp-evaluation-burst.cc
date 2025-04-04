@@ -54,6 +54,10 @@ std::string fct_output_file = "fct.txt";
 std::string pkt_output_file = "pkt.txt";
 std::string pfc_output_file = "pfc.txt";
 
+bool lying_enabled = false;
+double lying_prob = 0;
+double lying_mag = 0;
+
 double alpha_resume_interval = 55, rp_timer, ewma_gain = 1 / 16;
 double rate_decrease_interval = 4;
 uint32_t fast_recovery_times = 5;
@@ -457,6 +461,30 @@ int main(int argc, char *argv[])
 				std::cout << "ENABLE_QCN\t\t\t" << "Yes" << "\n";
 			else
 				std::cout << "ENABLE_QCN\t\t\t" << "No" << "\n";
+		}
+		else if (key.compare("LYING_ENABLED") == 0)
+		{	
+			uint32_t v;
+			conf >> v;
+			lying_enabled = v;
+			if (lying_enabled)
+				std::cout << "LYING_ENABLED\t\t\t" << "Yes" << "\n";
+			else
+				std::cout << "LYING_ENABLED\t\t\t" << "No" << "\n";
+		}
+		else if (key.compare("LYING_PROBABILITY") == 0)
+		{
+			double v;
+			conf >> v;
+			lying_prob = v;
+			std::cout << "LYING_PROBABILITY\t\t\t" << lying_prob << "\n";
+		}
+		else if (key.compare("LYING_MAGNITUDE") == 0)
+		{
+			double v;
+			conf >> v;
+			lying_mag = v;
+			std::cout << "LYING_MAGNITUDE\t\t\t" << lying_mag << "\n";
 		}
 		else if (key.compare("CLAMP_TARGET_RATE") == 0)
 		{
@@ -1078,6 +1106,11 @@ int main(int argc, char *argv[])
 			sw->SetAttribute("CcMode", UintegerValue(cc_mode));
 			sw->SetAttribute("MaxRtt", UintegerValue(maxRtt));
 			sw->SetAttribute("PowerEnabled", BooleanValue(wien));
+
+			// Swicthes lie
+			sw->SetAttribute("LyingEnabled", BooleanValue(lying_enabled));
+			sw->SetAttribute("LyingProbability", DoubleValue(lying_prob));
+			sw->SetAttribute("LyingMagnitude", DoubleValue(lying_mag));
 		}
 	}
 
