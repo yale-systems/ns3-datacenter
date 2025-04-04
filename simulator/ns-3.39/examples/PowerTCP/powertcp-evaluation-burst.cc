@@ -375,6 +375,8 @@ uint64_t get_nic_rate(NodeContainer &n) {
 			return DynamicCast<QbbNetDevice>(n.Get(i)->GetDevice(1))->GetDataRate().GetBitRate();
 }
 
+uint64_t totalTxBytes = 0;
+
 void PrintResults(std::map<uint32_t, NetDeviceContainer> ToR, uint32_t numToRs, double delay) {
 	for (uint32_t i = 0; i < numToRs; i++) {
 		double throughputTotal = 0;
@@ -384,6 +386,7 @@ void PrintResults(std::map<uint32_t, NetDeviceContainer> ToR, uint32_t numToRs, 
 			Ptr<QbbNetDevice> nd = DynamicCast<QbbNetDevice>(ToR[i].Get(j));
 //			uint64_t txBytes = nd->getTxBytes();
 			uint64_t txBytes = nd->GetQueue()->getTxBytes();
+			totalTxBytes += txBytes;
 			double rxBytes = nd->getNumRxBytes();
 
 			uint64_t qlen = nd->GetQueue()->GetNBytesTotal();
@@ -396,7 +399,7 @@ void PrintResults(std::map<uint32_t, NetDeviceContainer> ToR, uint32_t numToRs, 
 				power = (rxBytes * 8.0 / delay) * (qlen + bw * maxRtt * 1e-9) / (bw * (bw * maxRtt * 1e-9));
 
 			}
-			std::cout << "ToR " << i << " Port " << j << " throughput " << throughput << " txBytes " << txBytes << " qlen " << qlen << " time " << Simulator::Now().GetSeconds() << " normpower " << power << std::endl;
+			std::cout << "ToR " << i << " Port " << j << " throughput " << throughput << " txBytes " << txBytes << " qlen " << qlen << " time " << Simulator::Now().GetSeconds() << " normpower " << power << " totalTxByte " << totalTxBytes << std::endl;
 		}
 		std::cout << "ToR " << i << " Total " << 0 << " throughput " << throughputTotal << " buffer " << torBuffer <<  " time " << Simulator::Now().GetSeconds() << std::endl;
 	}

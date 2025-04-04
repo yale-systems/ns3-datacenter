@@ -5,7 +5,8 @@ RES_RESULTS=$NS3/examples/PowerTCP/results_burst
 mkdir $RES_DUMP
 mkdir $RES_RESULTS
 
-algs=(0 1 2 3 4 5)
+# algs=(0 1 2 3 4 5)
+algs=(1 2 3)
 
 algNames=("dcqcn" "powerInt" "hpcc" "powerDelay" "timely" "dctcp")
 CCMODE=(1 3 3 3 7 8)

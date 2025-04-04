@@ -287,22 +287,20 @@ void SwitchNode::SwitchNotifyDequeue(uint32_t ifIndex, uint32_t qIndex, Ptr<Pack
 			IntHeader *ih = (IntHeader*)&buf[PppHeader::GetStaticSize() + 20 + 8 + 6]; // ppp, ip, udp, SeqTs, INT
 			Ptr<QbbNetDevice> dev = DynamicCast<QbbNetDevice>(m_devices[ifIndex]);
 			if (m_ccMode == 3) { // HPCC or PowerTCP-INT
-				if (!PowerEnabled)
-					ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
-				else {
-					if (!lying_enabled) {
-						ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
-					}
-					else {
-						uint32_t new_qlen = dev->GetQueue()->GetNBytesTotal();
-
-						if (uniformRV->GetValue() <= lying_prob) 
-							new_qlen = (uint32_t)((double)dev->GetQueue()->GetNBytesTotal() * (1.0 - lying_mag));
-
-						ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), new_qlen, dev->GetDataRate().GetBitRate());
-					}
+				uint32_t new_qlen = dev->GetQueue()->GetNBytesTotal();;
+				if (lying_enabled) {
+					if (uniformRV->GetValue() <= lying_prob) 
+						new_qlen = (uint32_t)((double)dev->GetQueue()->GetNBytesTotal() * (1.0 - lying_mag));
 				}
-				// ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
+
+				if (!PowerEnabled){
+					ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], new_qlen, dev->GetDataRate().GetBitRate());
+					// ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
+				}
+				else {
+					ih->PushHop(Simulator::Now().GetTimeStep(), dev->GetQueue()->GetNBytesRxTotal(), new_qlen, dev->GetDataRate().GetBitRate());
+					// ih->PushHop(Simulator::Now().GetTimeStep(), m_txBytes[ifIndex], dev->GetQueue()->GetNBytesTotal(), dev->GetDataRate().GetBitRate());
+				}
 			} else if (m_ccMode == 10) { // HPCC-PINT
 				uint64_t t = Simulator::Now().GetTimeStep();
 				uint64_t dt = t - m_lastPktTs[ifIndex];
